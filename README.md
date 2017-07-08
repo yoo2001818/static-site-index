@@ -40,20 +40,30 @@ let index = new Index(backend, {
   // The primary key (unique identifier) of the document.
   // This will be indexed by default.
   key: 'id',
-  indexes: [
-    ['tags'], // { tags: '...' }, { tags: ['...'] } will be indexed
-    ['name', 'tags'], // ('name', 'tags') tuple
-    ['language', 'name', 'date'], // ('language', 'name', 'date') tuple
-    ['author.name'], // { author: [{ name: '...' }] } will be indexed
-    // Instead of hash code, the specified name will be used instead:
-    { name: 'theMagicalIndex', fields: ['name'] },
-  ],
   // The single node size of B+Tree. 
   size: 20,
 });
 ```
 
 ### Modifying Indexes
+Since the index can contain many B+Tree indexes, the indexes information is
+stored in its manifest file. You can add / remove indexes like this.
+If there are data in indexes, it may take a while since it needs to generate
+indexes for already existing data.
+
+```js
+index.addIndexes([
+  ['tags'], // { tags: '...' }, { tags: ['...'] } will be indexed
+  ['name', 'tags'], // ('name', 'tags') tuple
+  ['language', 'name', 'date'], // ('language', 'name', 'date') tuple
+  ['author.name'], // { author: [{ name: '...' }] } will be indexed
+]); // Returns a Promise
+
+index.addIndex(['name']); // Returns a Promise
+index.removeIndex(['name']); // Returns a Promise
+```
+
+### Modifying Data
 After the index is created, you can add / remove data from the index,
 if the backend allows to do so. (DOM fetch backend can't use this.)
 
