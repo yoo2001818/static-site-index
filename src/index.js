@@ -6,11 +6,18 @@ export default class Index {
     const { key = 'id', size = 2 } = config;
     this.backend = backend;
     this.config = { key, size };
+    this.manifest = undefined;
+    this.manifestPromise = backend.getManifest()
+      .then(manifest => { this.manifest = manifest; return manifest; });
     // TODO Load manifest information
     // TODO Manage each indexes
     // TODO Query builder
     // TODO Data manager
     // TODO Syncing
+  }
+  getManifest() {
+    if (this.manifest !== undefined) return Promise.resolve(manifest);
+    return this.manifestPromise;
   }
   // Index manangement functions
   addIndexes(indexes) {
