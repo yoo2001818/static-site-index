@@ -7,9 +7,16 @@ export default class Index {
     this.backend = backend;
     this.config = { key, size };
     this.manifest = undefined;
+    // Load manifest information..
     this.manifestPromise = backend.getManifest()
-      .then(manifest => { this.manifest = manifest; return manifest; });
-    // TODO Load manifest information
+      .then(manifest => {
+        // If the manifest is missing, provide initialization data.
+        this.manifest = manifest || {
+          populated: false,
+          indexes: [],
+        };
+        return manifest;
+      });
     // TODO Manage each indexes
     // TODO Query builder
     // TODO Data manager

@@ -1,12 +1,12 @@
 export default class MemoryBackend {
   constructor() {
-    // Nothing to do here yet
+    this.manifest = null;
   }
-  getManifest() {
-
+  async getManifest() {
+    return this.manifest;
   }
-  setManifest(data) {
-
+  async setManifest(data) {
+    this.manifest = data;
   }
   // Name 'null' is reversed to primary data storage, which stores actual data
   // instead of bunch of PKs
@@ -14,14 +14,14 @@ export default class MemoryBackend {
   // TODO Wouldn't it be better to create specialized object for specific
   // index? Although since they need disk access, it won't matter at all
   // I think.
-  getIndexEntry(name, id) {
+  async getIndexEntry(name, id) {
     
   }
-  setIndexEntry(name, id, data) {
+  async setIndexEntry(name, id, data) {
     // Data 'undefined' deletes the entry
   }
   // Commit all cache to disk (Which does nothing in memory backend)
-  commit() {
+  async commit() {
     
   }
 }
