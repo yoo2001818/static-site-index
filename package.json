@@ -25,7 +25,9 @@
     "url": "https://github.com/yoo2001818/static-site-index/issues"
   },
   "homepage": "https://github.com/yoo2001818/static-site-index#readme",
-  "dependencies": {},
+  "dependencies": {
+    "async-btree": "^1.0.0"
+  },
   "devDependencies": {
     "babel-core": "^6.25.0",
     "babel-eslint": "^7.2.3",

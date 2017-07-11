@@ -1,4 +1,6 @@
 import MemoryBackend from './backend/memory';
+import BPlusTree from 'async-btree/lib/bplustree';
+import createComparator from './util/comparator';
 
 export default class Index {
   constructor(backend = new MemoryBackend(), config = {}) {
@@ -25,6 +27,15 @@ export default class Index {
   getManifest() {
     if (this.manifest !== undefined) return Promise.resolve(manifest);
     return this.manifestPromise;
+  }
+  _createIndex(id, index) {
+    // Create the index object - an actual B+Tree object, along with its
+    // comparator code.
+    let btree = new BPlusTree(
+      null, // TODO
+      this.config.size,
+      createComparator(index),
+    );
   }
   // Index manangement functions
   addIndexes(indexes) {
