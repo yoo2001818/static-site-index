@@ -33,6 +33,10 @@ export default class Index {
   _createIndex(index) {
     // Create the index object - an actual B+Tree object, along with its
     // comparator code.
+    // Note that the B+Tree implementation treats keys and values separately -
+    // the backend is responsible for synchronizing keys and values, since it
+    // can simply copy / paste while loading. 'primary' index should be treated
+    // differently, though.
     let btree = new BPlusTree(
       null, // TODO
       this.config.size,
@@ -42,32 +46,36 @@ export default class Index {
   }
   // Index manangement functions
   addIndexes(indexes) {
-
+    // Since each index doesn't touch other indexes at all, we can run this
+    // in parallel - but manifest modifying should be an atomic operation in
+    // order to do that.
   }
-  addIndex(index) {
-
+  async addIndex(index) {
+    await this.getManifest();
   }
-  removeIndex(index) {
-
+  async removeIndex(index) {
+    await this.getManifest();
   }
   // Data management functions
-  add(document) {
-
+  async add(document) {
+    await this.getManifest();
   }
-  remove(document) {
-
+  async remove(document) {
+    await this.getManifest();
   }
-  get(pk) {
-
+  async get(pk) {
+    await this.getManifest();
   }
-  commit() {
-
+  async commit() {
+    // If manifest doesn't exist, it can be ignored since nothing is written or
+    // read.
+    if (this.manifest === undefined) return;
   }
   // Queries
-  explain(query) {
-
+  async explain(query) {
+    await this.getManifest();
   }
-  search(query) {
-
+  async search(query) {
+    await this.getManifest();
   }
 }
