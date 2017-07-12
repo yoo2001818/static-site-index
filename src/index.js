@@ -17,8 +17,10 @@ export default class Index {
           populated: false,
           indexes: [],
         };
+        this.btrees = this.manifest.indexes.map(this._createIndex.bind(this));
         return manifest;
       });
+    this.btrees = [];
     // TODO Manage each indexes
     // TODO Query builder
     // TODO Data manager
@@ -28,7 +30,7 @@ export default class Index {
     if (this.manifest !== undefined) return Promise.resolve(manifest);
     return this.manifestPromise;
   }
-  _createIndex(id, index) {
+  _createIndex(index) {
     // Create the index object - an actual B+Tree object, along with its
     // comparator code.
     let btree = new BPlusTree(
@@ -36,6 +38,7 @@ export default class Index {
       this.config.size,
       createComparator(index),
     );
+    return btree;
   }
   // Index manangement functions
   addIndexes(indexes) {
