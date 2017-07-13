@@ -13,8 +13,8 @@ export default class Index {
     this.manifestPromise = backend.getManifest()
       .then(manifest => {
         // If the manifest is missing, provide initialization data.
+        // { keys: ['id', 'test'], name: 'aaa', root: 53 }
         this.manifest = manifest || {
-          populated: false,
           indexes: [],
         };
         this.btrees = this.manifest.indexes.map(this._createIndex.bind(this));
@@ -38,7 +38,6 @@ export default class Index {
     // can simply copy / paste while loading. 'primary' index should be treated
     // differently, though.
     let btree = new BPlusTree(
-      null, // TODO
       this.config.size,
       createComparator(index),
     );
