@@ -1,6 +1,7 @@
 export default class MemoryBackend {
   constructor() {
     this.manifest = null;
+    this.entries = {};
   }
   async getManifest() {
     return this.manifest;
@@ -15,10 +16,13 @@ export default class MemoryBackend {
   // index? Although since they need disk access, it won't matter at all
   // I think.
   async getIndexEntry(name, id) {
-    
+    let key = name + '-' + id;
+    return this.entries[key];
   }
   async setIndexEntry(name, id, data) {
     // Data 'undefined' deletes the entry
+    let key = name + '-' + id;
+    this.entries[key] = data;
   }
   // Commit all cache to disk (Which does nothing in memory backend)
   async commit() {

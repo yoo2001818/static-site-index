@@ -14,8 +14,10 @@ export default class Index {
       .then(manifest => {
         // If the manifest is missing, provide initialization data.
         // { keys: ['id', 'test'], name: 'aaa', root: 53 }
+        // Note that index 'metadata' and 'data' is separated.
         this.manifest = manifest || {
           indexes: [],
+          indexData: {},
         };
         this.btrees = this.manifest.indexes.map(this._createIndex.bind(this));
         return manifest;
@@ -29,6 +31,10 @@ export default class Index {
   getManifest() {
     if (this.manifest !== undefined) return Promise.resolve(manifest);
     return this.manifestPromise;
+  }
+  setManifest(data) {
+    this.manifest = data;
+    return this.backend.setManifest(data);
   }
   _createIndex(index) {
     // Create the index object - an actual B+Tree object, along with its
