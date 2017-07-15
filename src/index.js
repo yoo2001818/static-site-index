@@ -1,5 +1,6 @@
 import MemoryBackend from './backend/memory';
 import BPlusTree from 'async-btree/lib/bplustree';
+import TreeAdapter from './treeAdapter';
 import createComparator from './util/comparator';
 
 export default class Index {
@@ -44,6 +45,7 @@ export default class Index {
     // can simply copy / paste while loading. 'primary' index should be treated
     // differently, though.
     let btree = new BPlusTree(
+      new TreeAdapter(this, index),
       this.config.size,
       createComparator(index),
     );
@@ -54,6 +56,7 @@ export default class Index {
     // Since each index doesn't touch other indexes at all, we can run this
     // in parallel - but manifest modifying should be an atomic operation in
     // order to do that.
+    return Promise.all(indexes.map(v => this.addIndex(v)));
   }
   async addIndex(index) {
     await this.getManifest();
@@ -71,10 +74,11 @@ export default class Index {
   async get(pk) {
     await this.getManifest();
   }
-  async commit() {
+  commit() {
     // If manifest doesn't exist, it can be ignored since nothing is written or
     // read.
     if (this.manifest === undefined) return;
+    return this.backend.commit();
   }
   // Queries
   async explain(query) {
