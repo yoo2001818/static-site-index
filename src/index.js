@@ -14,7 +14,6 @@ export default class Index {
     this.manifestPromise = backend.getManifest()
       .then(manifest => {
         // If the manifest is missing, provide initialization data.
-        // { keys: ['id', 'test'], name: 'aaa', root: 53 }
         // Note that index 'metadata' and 'data' is separated.
         this.manifest = manifest || {
           indexes: [],
