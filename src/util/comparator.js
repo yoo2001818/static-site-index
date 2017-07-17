@@ -1,3 +1,4 @@
+// Creates generalized comparator using a key.
 export default function createComparator(index) {
   const { keys } = index;
   // Create an comparator.
@@ -10,6 +11,15 @@ export default function createComparator(index) {
     }
     return 0;
   };
+}
+
+// Compares which index has higher order, which will be compared against the
+// query first.
+export function indexComparator(a, b) {
+  let keyLen = compare(a.keys.length, b.keys.length);
+  if (keyLen !== 0) return -keyLen;
+  // TODO Data size
+  return -compare(a.id, b.id);
 }
 
 function compare(a, b) {
