@@ -1,43 +1,35 @@
 export default class TreeAdapter {
-  constructor(index, metadata) {
+  constructor(index, data) {
     this.index = index;
     this.backend = index.backend;
-    let { name } = meatdata;
-    this.name = name;
+    this.data = data;
   }
-  _getData() {
-    // This is supposed to be synchronous since the whole manifest data is
-    // loaded before creating this object.
-    return this.index.manifest.indexData[this.name] || {
-      root: null,
-      nodes: 0,
-    };
-  }
-  _setData(data) {
-    // Notify update to manifest. We don't have to be immutable - we can just
-    // mutate the object and just call the set method.
-    this.index.manifest.indexData[this.name] = data;
+  _setData() {
+    // The manifest object is required to have `this.data`. If that's ensured,
+    // we can simply call 'setManifest' and we're good to go.
+    // TODO Is this really safe? I'd use immutable data structure...
     return this.index.setManifest(this.index.manifest);
   }
   getRoot() {
-    return Promise.resolve(this._getData().root);
+    return Promise.resolve(this.data.root);
   }
   writeRoot(id) {
-    // This is weird.
-    return this._setData(Object.assign(this._getData(), { root: id }));
+    this.data.root = id;
+    return this._setData();
   }
   read(id) {
-    return this.backend.getIndexEntry(this.name, id);
+    return this.backend.getIndexEntry(this.data.name, id);
   }
   write(id, node) {
-    return this.backend.setIndexEntry(this.name, id, node);
+    return this.backend.setIndexEntry(this.data.name, id, node);
   }
   remove(id) {
-    return this.backend.setIndexEntry(this.name, id, undefined);
+    return this.backend.setIndexEntry(this.data.name, id, undefined);
   }
   async allocate(node) {
-    let id = this._getData().nodes;
-    await this._setData(Object.assign(this._getData(), { nodes: id + 1 }));
+    let id = this.data.nodes;
+    this.data.nodes = id + 1;
+    await this._setData();
     return id;
   }
   // Put data directly into the B+Tree.

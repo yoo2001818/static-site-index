@@ -14,10 +14,12 @@ export default class Index {
     this.manifestPromise = backend.getManifest()
       .then(manifest => {
         // If the manifest is missing, provide initialization data.
-        // Note that index 'metadata' and 'data' is separated.
+        // The indexes are sorted in created order, so we have to sort them
+        // using a score to create query plan.
         this.manifest = manifest || {
-          indexes: [],
-          indexData: {},
+          indexes: [
+            { id: 0, name: 'pk', keys: [key], root: null, nodes: 0 },
+          ],
         };
         this.btrees = this.manifest.indexes.map(this._createIndex.bind(this));
         return manifest;
@@ -62,6 +64,7 @@ export default class Index {
   }
   async removeIndex(index) {
     await this.getManifest();
+    // We have to garbage collect all the nodes associated with the index.
   }
   // Data management functions
   async add(document) {
