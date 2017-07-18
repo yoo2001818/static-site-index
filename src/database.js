@@ -2,6 +2,7 @@ import MemoryBackend from './backend/memory';
 import BPlusTree from 'async-btree/lib/bplustree';
 import TreeAdapter from './treeAdapter';
 import createComparator, { indexComparator } from './util/comparator';
+import { createAsyncIterable } from './util/createIterable';
 
 export default class Database {
   constructor(backend = new MemoryBackend(), config = {}) {
@@ -42,6 +43,7 @@ export default class Database {
     return this.backend.setManifest(data);
   }
   _createIndex(index) {
+    if (index == null) return null;
     // Create the index object - an actual B+Tree object, along with its
     // comparator code.
     // Note that the B+Tree implementation treats keys and values separately -
@@ -67,22 +69,25 @@ export default class Database {
     // Check if indexes array has exactly same entry as provided keys. If it
     // already exists, silently fail. (What)
     if (this.manifest.indexes.some(index => {
+      if (index == null) return false;
       if (index.keys.length !== keys.length) return false;
-      return !index.keys.every((v, i) => v === keys[i]));
+      return index.keys.every((v, i) => v === keys[i]));
     })) return false;
+    let indexId = this.manifest.indexes.indexOf(null);
+    if (indexId === -1) indexId = this.manifest.indexes.length;
     // Create an index entry and push it and its B+Tree into array.
     let index = {
-      id: this.manifest.indexes.length,
+      id: indexId,
       // The name should be unique enough yet short enough. We'll use its ID
       // for now.
-      name: this.manifest.indexes.length,
+      name: indexId,
       keys,
       root: null,
       nodes: 0,
     };
     let btree = this._createIndex(index);
-    this.manifest.indexes.push(index);
-    this.btrees.push(btree);
+    this.manifest.indexes[indexId] = index;
+    this.btrees[indexId] = btree;
     // Now, we have to provision the index. This is done before adding the
     // index to scored indexes array to prevent accidentally accessing unloaded
     // indexes by search queries, though the DB isn't designed to support
@@ -105,10 +110,37 @@ export default class Database {
     this.indexesScore[i] = index;
     // Commit the database.
     await this.commit();
+    return true;
   }
-  async removeIndex(index) {
+  async removeIndex(keys) {
     await this.getManifest();
+    // Find the index with the provided keys.
+    let index = this.manifest.indexes.find(index => {
+      if (index == null) return false;
+      if (index.keys.length !== keys.length) return false;
+      return index.keys.every((v, i) => v === keys[i]));
+    });
+    if (index == null) return false;
+    let btree = this.btrees[index.id];
+    if (btree == null) throw new Error('Assertion error: B-Tree is null');
+    // Remove the index from the array to prevent other 'threads' from using
+    // collapsing B-Tree.
+    // Since the ID is linked to index's position, we can't splice it - instead
+    // set to null. This will be filled by new indexes.
+    this.manifest.indexes[index.id] = null;
+    this.btrees[index.id] = null;
+    // Why is this immutable?
+    this.indexesScore = this.indexesScore.filter(v => v !== index);
     // We have to garbage collect all the nodes associated with the index.
+    // Iterate through the nodes of the B-Tree to remove all of them.
+    // TODO This could be done in parallel to make it faster.
+    for await (let node of createAsyncIterable(btree.iteratorNodesAll())) {
+      // Remove the node.
+      await btree.io.remove(node.id);
+    }
+    await this.commit();
+    // All done!
+    return true;
   }
   // Data management functions
   async add(document) {
