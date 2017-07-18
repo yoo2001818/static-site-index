@@ -36,7 +36,7 @@ export default class Database {
     // TODO Syncing
   }
   getManifest() {
-    if (this.manifest !== undefined) return Promise.resolve(manifest);
+    if (this.manifest !== undefined) return Promise.resolve(this.manifest);
     return this.manifestPromise;
   }
   setManifest(data) {
@@ -56,7 +56,7 @@ export default class Database {
       this.config.size,
       createComparator(index),
     );
-   return btree;
+    return btree;
   }
   // Index manangement functions
   addIndexes(indexes) {
@@ -76,7 +76,7 @@ export default class Database {
     if (this.manifest.indexes.some(index => {
       if (index == null) return false;
       if (index.keys.length !== keys.length) return false;
-      return index.keys.every((v, i) => v === keys[i]));
+      return index.keys.every((v, i) => v === keys[i]);
     })) return false;
     let indexId = this.manifest.indexes.indexOf(null);
     if (indexId === -1) indexId = this.manifest.indexes.length;
@@ -98,8 +98,9 @@ export default class Database {
     // indexes by search queries, though the DB isn't designed to support
     // locking mechanism.
     // Traverse whole PK tree and insert the values...
-    for await (let document of this.btrees[0]) {
-      await btree.insert(extractKeys(index, document), document);
+    // for await of loop causes some hiccups on eslint - we'll do this for now
+    for await (let document of this.btrees[0]) { // eslint-disable-line
+      await btree.insert(extractKeys(index, document), 0);
     }
     // All done, sync the manifest file. (This will be done by B+Tree though)
     await this.setManifest(this.manifest);
@@ -128,7 +129,7 @@ export default class Database {
     let index = this.manifest.indexes.find(index => {
       if (index == null) return false;
       if (index.keys.length !== keys.length) return false;
-      return index.keys.every((v, i) => v === keys[i]));
+      return index.keys.every((v, i) => v === keys[i]);
     });
     if (index == null) return false;
     let btree = this.btrees[index.id];
@@ -144,7 +145,9 @@ export default class Database {
     // We have to garbage collect all the nodes associated with the index.
     // Iterate through the nodes of the B-Tree to remove all of them.
     // TODO This could be done in parallel to make it faster.
+    /* eslint-disable */
     for await (let node of createAsyncIterable(btree.iteratorNodesAll())) {
+    /* eslint-enable */
       // Remove the node.
       await btree.io.remove(node.id);
     }
@@ -155,12 +158,27 @@ export default class Database {
   // Data management functions
   async add(document) {
     await this.getManifest();
+    for (let i = 0; i < this.indexes.length; ++i) {
+      let index = this.manifest.indexes[i];
+      let btree = this.btrees[i];
+      await btree.insert(extractKeys(index, document), i === 0 ? document : 0);
+    }
   }
-  async remove(document) {
+  async remove(input) {
     await this.getManifest();
+    // Pull the document from the database.
+    let pk = (this.config.key in input) ? input[this.config.key] : input;
+    let document = await this.btrees[0].get(pk);
+    // Remove the document from the indexes.
+    for (let i = 0; i < this.indexes.length; ++i) {
+      let index = this.manifest.indexes[i];
+      let btree = this.btrees[i];
+      await btree.remove(extractKeys(index, document));
+    }
   }
   async get(pk) {
     await this.getManifest();
+    return this.btrees[0].get(pk);
   }
   commit() {
     // If manifest doesn't exist, it can be ignored since nothing is written or

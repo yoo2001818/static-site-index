@@ -30,6 +30,8 @@ export function indexComparator(a, b) {
 
 function compare(a, b) {
   // TODO Compare non-number, non-string values
+  if (a == null && b != null) return 1;
+  if (a != null && b == null) return -1;
   if (a > b) return 1;
   if (a < b) return -1;
   return 0;

@@ -25,6 +25,5 @@ export default class MemoryBackend {
   }
   // Commit all cache to disk (Which does nothing in memory backend)
   async commit() {
-    
   }
 }
