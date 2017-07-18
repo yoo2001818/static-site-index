@@ -3,6 +3,7 @@ import BPlusTree from 'async-btree/lib/bplustree';
 import TreeAdapter from './treeAdapter';
 import createComparator, { indexComparator } from './util/comparator';
 import { createAsyncIterable } from './util/createIterable';
+import extractKeys from './util/extractKeys';
 
 export default class Database {
   constructor(backend = new MemoryBackend(), config = {}) {
@@ -64,8 +65,12 @@ export default class Database {
     // order to do that.
     return Promise.all(indexes.map(v => this.addIndex(v)));
   }
-  async addIndex(keys) {
+  async addIndex(keysArg) {
     await this.getManifest();
+    // TODO Validate keys
+    let keys;
+    if (keysArg[keysArg.length - 1] === this.config.key) keys = keysArg;
+    else keys = keysArg.concat(this.config.key);
     // Check if indexes array has exactly same entry as provided keys. If it
     // already exists, silently fail. (What)
     if (this.manifest.indexes.some(index => {
@@ -92,9 +97,10 @@ export default class Database {
     // index to scored indexes array to prevent accidentally accessing unloaded
     // indexes by search queries, though the DB isn't designed to support
     // locking mechanism.
-    
-    // TODO We have to traverse whole PK tree and insert the values...
-
+    // Traverse whole PK tree and insert the values...
+    for await (let document of this.btrees[0]) {
+      await btree.insert(extractKeys(index, document), document);
+    }
     // All done, sync the manifest file. (This will be done by B+Tree though)
     await this.setManifest(this.manifest);
     // After this, add the index in appropriate position in the indexesScore
@@ -112,8 +118,12 @@ export default class Database {
     await this.commit();
     return true;
   }
-  async removeIndex(keys) {
+  async removeIndex(keysArg) {
     await this.getManifest();
+    // TODO Validate keys
+    let keys;
+    if (keysArg[keysArg.length - 1] === this.config.key) keys = keysArg;
+    else keys = keysArg.concat(this.config.key);
     // Find the index with the provided keys.
     let index = this.manifest.indexes.find(index => {
       if (index == null) return false;

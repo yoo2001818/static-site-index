@@ -1,16 +1,22 @@
-// Creates generalized comparator using a key.
+// Creates a generalized comparator using a key.
+// But the index only gets an array for a key - that means we just have to
+// compare the array, that's all.
 export default function createComparator(index) {
   const { keys } = index;
   // Create an comparator.
-  return (a, b) => {
-    // Compare each keys, return if non-zero.
-    for (let i = 0; i < keys.length; ++i) {
-      let key = keys[i];
-      let compared = compare(a[key], b[key]);
-      if (compared !== 0) return compared;
-    }
-    return 0;
-  };
+  if (keys.length === 1) {
+    // single key index doesn't use an array.
+    return compare;
+  } else {
+    return (a, b) => {
+      // Compare each keys, return if non-zero.
+      for (let i = 0; i < keys.length; ++i) {
+        let compared = compare(a[i], b[i]);
+        if (compared !== 0) return compared;
+      }
+      return 0;
+    };
+  }
 }
 
 // Compares which index has higher order, which will be compared against the
