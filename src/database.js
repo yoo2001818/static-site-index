@@ -30,10 +30,6 @@ export default class Database {
         return manifest;
       });
     this.btrees = [];
-    // TODO Manage each indexes
-    // TODO Query builder
-    // TODO Data manager
-    // TODO Syncing
   }
   getManifest() {
     if (this.manifest !== undefined) return Promise.resolve(this.manifest);
@@ -158,19 +154,30 @@ export default class Database {
   // Data management functions
   async add(document) {
     await this.getManifest();
-    for (let i = 0; i < this.indexes.length; ++i) {
+    // Detect if the PK index already has specified document. If it's already
+    // specified - remove previous indexes.
+    let prevDocument = this.btrees[0].insert(
+      extractKeys(this.manifest.indexes[0], document), document, true);
+    for (let i = 1; i < this.indexes.length; ++i) {
       let index = this.manifest.indexes[i];
       let btree = this.btrees[i];
-      await btree.insert(extractKeys(index, document), i === 0 ? document : 0);
+      // Remove previous indexes - that is, perform insert query first to
+      // determine if it has same value as before.
+      let prevIndex = await btree.insert(extractKeys(index, document), 0, true);
+      // It's not overwritten - remove the previous value.
+      if (prevDocument !== null && prevIndex === null) {
+        await btree.remove(extractKeys(index, prevDocument), 0, true);
+      }
     }
   }
   async remove(input) {
     await this.getManifest();
     // Pull the document from the database.
     let pk = (this.config.key in input) ? input[this.config.key] : input;
-    let document = await this.btrees[0].get(pk);
+    let document = await this.btrees[0].remove(pk);
+    if (document == null) return;
     // Remove the document from the indexes.
-    for (let i = 0; i < this.indexes.length; ++i) {
+    for (let i = this.indexes.length - 1; i >= 1; --i) {
       let index = this.manifest.indexes[i];
       let btree = this.btrees[i];
       await btree.remove(extractKeys(index, document));
