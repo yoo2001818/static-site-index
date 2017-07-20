@@ -6,7 +6,7 @@ import { createAsyncIterable } from './util/createIterable';
 import extractKeys from './util/extractKeys';
 
 export default class Database {
-  constructor(backend = new MemoryBackend(), config = {}) {
+  constructor(config = {}, backend = new MemoryBackend()) {
     // TODO Set the size to bigger value - this is only for testing.
     const { key = 'id', size = 2 } = config;
     this.backend = backend;
@@ -104,7 +104,7 @@ export default class Database {
     // array. Since this is not a linked array, we have to shift all other
     // indexes.
     let i;
-    for (i = this.indexesScore.length + 1; i > 0; --i) {
+    for (i = this.indexesScore.length; i > 0; --i) {
       // Stop if selected index is higher than the new index.
       // TODO I'm not sure about the order
       if (indexComparator(this.indexesScore[i - 1], index) > 0) break;
@@ -156,9 +156,9 @@ export default class Database {
     await this.getManifest();
     // Detect if the PK index already has specified document. If it's already
     // specified - remove previous indexes.
-    let prevDocument = this.btrees[0].insert(
+    let prevDocument = await this.btrees[0].insert(
       extractKeys(this.manifest.indexes[0], document), document, true);
-    for (let i = 1; i < this.indexes.length; ++i) {
+    for (let i = 1; i < this.manifest.indexes.length; ++i) {
       let index = this.manifest.indexes[i];
       let btree = this.btrees[i];
       // Remove previous indexes - that is, perform insert query first to
