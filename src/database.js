@@ -153,6 +153,14 @@ export default class Database {
   }
   // Data management functions
   async add(document) {
+    // Since document should be an object, arrays should be considered as an
+    // array of documents.
+    if (Array.isArray(document)) {
+      for (let docu of document) {
+        await this.add(docu);
+      }
+      return;
+    }
     await this.getManifest();
     // Detect if the PK index already has specified document. If it's already
     // specified - remove previous indexes.

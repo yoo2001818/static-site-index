@@ -7,11 +7,15 @@ describe('database', () => {
     // Prepopulate with some data
     database = new Database();
     // Currently the database doesn't support object hierarchy.
-    await database.add({
+    await database.add([{
       id: 3,
       title: 'hello world',
       score: 5,
-    });
+    }, {
+      id: 1,
+      title: 'what',
+      score: 20,
+    }]);
   });
   describe('#addIndex', () => {
     it('should add an index', async() => {
