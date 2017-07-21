@@ -26,4 +26,19 @@ describe('database', () => {
       ]);
     });
   });
+  describe('#explain', () => {
+    it('should return appropriate results', async() => {
+      await database.addIndex(['title']);
+      expect(await database.explain({})).toEqual([{
+        id: 0,
+        index: [],
+        type: 'range',
+      }]);
+      expect(await database.explain({ where: { id: 3 } })).toEqual([{
+        id: 0,
+        index: [],
+        type: 'match',
+      }]);
+    });
+  });
 });
