@@ -30,14 +30,42 @@ describe('database', () => {
     it('should return appropriate results', async() => {
       await database.addIndex(['title']);
       expect(await database.explain({})).toEqual([{
-        id: 0,
-        index: [],
+        index: { id: 0, keys: ['id'] },
         type: 'range',
+        lowEqual: true,
+        highEqual: true,
+        low: undefined,
+        high: undefined,
       }]);
       expect(await database.explain({ where: { id: 3 } })).toEqual([{
-        id: 0,
-        index: [],
+        index: { id: 0, keys: ['id'] },
         type: 'match',
+        values: [3],
+      }]);
+      expect(await database.explain({ order: [{ id: 1 }] })).toEqual([{
+        index: { id: 0, keys: ['id'] },
+        type: 'range',
+        lowEqual: true,
+        highEqual: true,
+        low: undefined,
+        high: undefined,
+      }]);
+      expect(await database.explain({ order: [{ id: -1 }] })).toEqual([{
+        index: { id: 0, keys: ['id'] },
+        type: 'range',
+        reverse: true,
+        lowEqual: true,
+        highEqual: true,
+        low: undefined,
+        high: undefined,
+      }]);
+      expect(await database.explain({ order: [{ title: 1 }] })).toEqual([{
+        index: { id: 1, keys: ['title', 'id'] },
+        reverse: true,
+        lowEqual: true,
+        highEqual: true,
+        low: undefined,
+        high: undefined,
       }]);
     });
   });
