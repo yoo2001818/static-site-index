@@ -42,7 +42,7 @@ describe('database', () => {
         type: 'match',
         values: [3],
       }]);
-      expect(await database.explain({ order: [{ id: 1 }] })).toEqual([{
+      expect(await database.explain({ order: [['id', 1]] })).toEqual([{
         index: { id: 0, keys: ['id'] },
         type: 'range',
         lowEqual: true,
@@ -50,7 +50,7 @@ describe('database', () => {
         low: undefined,
         high: undefined,
       }]);
-      expect(await database.explain({ order: [{ id: -1 }] })).toEqual([{
+      expect(await database.explain({ order: [['id', -1]] })).toEqual([{
         index: { id: 0, keys: ['id'] },
         type: 'range',
         reverse: true,
@@ -59,7 +59,7 @@ describe('database', () => {
         low: undefined,
         high: undefined,
       }]);
-      expect(await database.explain({ order: [{ title: 1 }] })).toEqual([{
+      expect(await database.explain({ order: [['title', -1]] })).toEqual([{
         index: { id: 1, keys: ['title', 'id'] },
         reverse: true,
         lowEqual: true,

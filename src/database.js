@@ -204,6 +204,19 @@ export default class Database {
   // Queries
   async explain(query) {
     await this.getManifest();
+    // Query planner code goes here.
+    // Extract keys from the query.
+    // TODO Separate range / match query. Range queries must be processed
+    // first.
+    let whereKeys = Object.keys(query.where || {});
+    let orders = query.order || [];
+    // Check keys against each index.
+    let fulfilled = this.manifest.indexes.find(index => {
+      // TODO Check orders too
+      return index.keys.slice(0, -1).every(v => whereKeys.indexOf(v) !== -1);
+    });
+    // Construct query with selected index.
+    console.log(fulfilled);
   }
   async search(query) {
     await this.getManifest();
