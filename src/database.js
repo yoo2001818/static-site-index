@@ -216,7 +216,19 @@ export default class Database {
       return index.keys.slice(0, -1).every(v => whereKeys.indexOf(v) !== -1);
     });
     // Construct query with selected index.
+    let result = [{
+      index: {
+        id: fulfilled.id,
+        keys: fulfilled.keys,
+      },
+      type: 'range',
+      lowEqual: true,
+      highEqual: true,
+      low: undefined,
+      high: undefined,
+    }];
     console.log(fulfilled);
+    return result;
   }
   async search(query) {
     await this.getManifest();
