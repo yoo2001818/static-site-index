@@ -208,7 +208,8 @@ export default class Database {
     // Extract keys from the query.
     // TODO Separate range / match query. Range queries must be processed
     // first.
-    let whereKeys = Object.keys(query.where || {});
+    let wheres = query.where || [];
+    let whereKeys = Object.keys(wheres);
     let orders = query.order || [];
     // Check keys against each index.
     let fulfilled = this.manifest.indexes.find(index => {
@@ -216,17 +217,29 @@ export default class Database {
       return index.keys.slice(0, -1).every(v => whereKeys.indexOf(v) !== -1);
     });
     // Construct query with selected index.
-    let result = [{
-      index: {
-        id: fulfilled.id,
-        keys: fulfilled.keys,
-      },
-      type: 'range',
-      lowEqual: true,
-      highEqual: true,
-      low: undefined,
-      high: undefined,
-    }];
+    let result;
+    if (wheres[fulfilled.keys[0]] != null) {
+      result = [{
+        index: {
+          id: fulfilled.id,
+          keys: fulfilled.keys,
+        },
+        type: 'match',
+        values: fulfilled.keys.map(v => wheres[v]),
+      }];
+    } else {
+      result = [{
+        index: {
+          id: fulfilled.id,
+          keys: fulfilled.keys,
+        },
+        type: 'range',
+        lowEqual: true,
+        highEqual: true,
+        low: undefined,
+        high: undefined,
+      }];
+    }
     console.log(fulfilled);
     return result;
   }
