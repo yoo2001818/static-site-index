@@ -72,6 +72,58 @@ query is represented using a single JS object, unlike MongoDB.
 }
 ```
 
+## Query Parsing
+After the query is passed to the database, The database should divide it down
+to much simpler representation. This is unrelated from the indexes, instead,
+it's an 3D array... first array is for AND logic, 2nd array is for OR logic,
+and 3nd array is for AND logic.
+
+Each operator is laid out, but NOT is not permitted - it must be changed to
+different operators. e.g. `lte` should be converted to `gt`.
+
+```js
+// This transforms to...
+{
+  where: {
+    a: { $in: [1, 2] },
+    b: { $lte: 3, $gte: 5 },
+    c: { $not: { $gte: 4 } },
+    $or: [
+      { d: 3, e: 5 },
+      { d: 5, e: 3 },
+    },
+  },
+}
+// this.
+[
+  [
+    [
+      { name: 'a', operator: 'eq', value: 1 }, 
+    ],
+    [
+      { name: 'a', operator: 'eq', value: 2 },
+    ],
+  ],
+  [
+    [
+      { name: 'b', operator: 'lte', value: 3 },
+      { name: 'b', operator: 'gte', value: 5 },
+      { name: 'c', operator: 'lt', value: 4 },
+    ],
+  ],
+  [
+    [
+      { name: 'd', operator: 'eq', value: 3 },
+      { name: 'e', operator: 'eq', value: 5 },
+    ],
+    [
+      { name: 'd', operator: 'eq', value: 5 },
+      { name: 'e', operator: 'eq', value: 3 },
+    ],
+  ]
+]
+```
+
 ## Task
 The indexes can perform strategies to execute the query. Each task
 acts like a pipe - It may be a good idea to make each task as a Node.js
