@@ -6,7 +6,7 @@ pipe.
 
 ## Document
 Document equals to a single JSON document - which is convinient to use in most
-languages. A dcument may contain an array, or an object, or an actual value
+languages. A document may contain an array, or an object, or an actual value
 (string, number, boolean, null).
 
 If an array is specified, its entries will be inserted into the indexes
@@ -21,6 +21,56 @@ unwanted values, while order clause orders the database.
 There is also distinct clause, which filters the same value repeating over and
 over again for specified columns. But that's really simple to implement, if the
 array is sorted in order. Otherwise, quicksort in the memory!
+
+### Query Structure
+Queries use some kind of mixture of between MongoDB and Sequelize. The whole
+query is represented using a single JS object, unlike MongoDB.
+
+```js
+{
+  where: {
+    id: {
+      $eq: 1,
+      $gt: 1,
+      $gte: 1,
+      $lt: 1,
+      $lte: 1,
+      $ne: 1,
+      $in: [1, 2],
+      $nin: [1, 2],
+    },
+    $or: [
+      { name: { $lt: 4 } },
+      { name: { $gt: 4 } },
+    ],
+    $and: [ /* ... */ ],
+    $not: {
+      title: "hello",
+    },
+    body: { $exists: true },
+    views: {
+      $mod: [3, 1],
+      $regex: /1/g,
+    },
+    tags: {
+      $all: ['a', 'b', 'c'],
+      $size: {
+        $lt: 3,
+        $gt: 2,
+      },
+    },
+    footer: {
+      copyright: 'MIT',
+    },
+    $where: (doc) => true,
+  },
+  order: [
+    ['id', -1],
+    // ['id', 1],
+  ],
+  distinct: ['id', 'title'],
+}
+```
 
 ## Task
 The indexes can perform strategies to execute the query. Each task
@@ -53,5 +103,3 @@ Filters the values according to the function.
 ### Dedupe Task
 Dedupes the values according to the "wanted" keys - if the tuple is already
 registered on the hashmap, it simply ignores that value.
-
-It may use probabilistic algorithm to reduce the memory load.
