@@ -124,6 +124,14 @@ different operators. e.g. `lte` should be converted to `gt`.
 ]
 ```
 
+## Query Scoring
+After the operators are spread out, each indexes are tested against the
+criteria and scored. Index with lowest score will win and used against the
+query.
+
+If the query contains OR query, it can use multiple indexes to more efficiently
+search the table. If so, indexes are scored separately for each section.
+
 ## Task
 The indexes can perform strategies to execute the query. Each task
 acts like a pipe - It may be a good idea to make each task as a Node.js
