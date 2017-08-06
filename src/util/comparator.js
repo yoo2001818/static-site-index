@@ -28,7 +28,7 @@ export function indexComparator(a, b) {
   return -compare(a.id, b.id);
 }
 
-function compare(a, b) {
+export function compare(a, b) {
   // TODO Compare non-number, non-string values
   if (a == null && b != null) return 1;
   if (a != null && b == null) return -1;
