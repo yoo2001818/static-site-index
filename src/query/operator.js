@@ -73,7 +73,11 @@ export function union(a, b) {
 
   // We need some kind of object to mark 'Infinity' and '-Infinity' to treat
   // lt and gt as a range.
-  let flags = PAIR_BIT_FLAGS[a.type] | PAIR_BIT_FLAGS[b.type];
+  let aFlag = PAIR_BIT_FLAGS[a.type];
+  let bFlag = PAIR_BIT_FLAGS[b.type];
+  let flags = aFlag | bFlag;
+  let low = aFlag > bFlag ? b : a;
+  let high = aFlag > bFlag ? a : b;
   switch (flags) {
     case 1: // eq & eq
       return {
@@ -88,8 +92,11 @@ export function union(a, b) {
         values: a.values.concat(b.values),
       };
     case 3: // eq & ne
-
-      break;
+      // high is ne, low is eq
+      return {
+        type: 'ne',
+        values: high.values.filter(v => !low.values.includes(v)),
+      };
     case 4: // (l|g)t & (l|g)t
 
       break;
