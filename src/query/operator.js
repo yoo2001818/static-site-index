@@ -96,7 +96,7 @@ export function union(a, b) {
   // Case 8. range/lt, range/gt - Treat it like (Infinity, N) or (N, Infinity)
   // Case 9. lt/eq, gt/eq, range/eq - Expand range's ...range to contain all
   // the eq's value.
-  // Case 10. lt/ne, gt/ne, range/ne - Always false.
+  // Case 10. lt/ne, gt/ne, range/ne - Always true.
   if (a === true || b === true) return true;
   if (a === false) return b;
   if (b === false) return a;
@@ -134,11 +134,24 @@ export function union(a, b) {
       let winner = compared > 0 ? true : (compared === 0 ? a.equal : false);
       return winner ? a : b;
     }
-    case 5: // lt & eq
-      break;
+    case 5: { // lt & eq
+      // Starting with lt's value, expand by eq's values.
+      let start = high.value;
+      let doEqual = high.equal;
+      low.values.forEach(v => {
+        if (compare(v, start) < 0) {
+          start = v;
+          doEqual = true;
+        }
+      });
+      return {
+        type: 'lt',
+        value: start,
+        equal: doEqual,
+      };
+    }
     case 6: // lt & ne
-
-      break;
+      return true;
     case 8: { // gt & gt
       // Pick the smallest value. If both values are same, pick the one with
       // equal flag.
@@ -146,12 +159,24 @@ export function union(a, b) {
       let winner = compared < 0 ? true : (compared === 0 ? a.equal : false);
       return winner ? a : b;
     }
-    case 9: // gt & eq
-
-      break;
+    case 9: { // gt & eq
+      // Starting with lt's value, expand by eq's values.
+      let start = high.value;
+      let doEqual = high.equal;
+      low.values.forEach(v => {
+        if (compare(v, start) > 0) {
+          start = v;
+          doEqual = true;
+        }
+      });
+      return {
+        type: 'gt',
+        value: start,
+        equal: doEqual,
+      };
+    }
     case 10: // gt & ne
-
-      break;
+      return true;
     case 12: // gt & lt
 
       break;
