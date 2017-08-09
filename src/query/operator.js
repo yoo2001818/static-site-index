@@ -177,9 +177,17 @@ export function union(a, b) {
     }
     case 10: // gt & ne
       return true;
-    case 12: // gt & lt
-
-      break;
+    case 12: { // gt & lt
+      if (compare(high.value, low.value) > 0) return true;
+      return {
+        type: 'range',
+        lt: low.value,
+        lte: low.equal,
+        gt: high.value,
+        gte: high.equal,
+        split: true,
+      };
+    }
     case 16: // range & range
       
       break;
