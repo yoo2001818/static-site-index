@@ -55,10 +55,10 @@ const PAIR_BIT_FLAGS = {
 };
 
 // Used to mark the lt/gt as a range query.
-const MAX_INFINITY = Symbol('Infinity');
-const MIN_INFINITY = Symbol('-Infinity');
+export const MAX_INFINITY = Symbol('Infinity');
+export const MIN_INFINITY = Symbol('-Infinity');
 
-function convertToRange(v) {
+export function convertToRange(v) {
   if (v.type === 'gt') {
     return {
       type: 'range',
