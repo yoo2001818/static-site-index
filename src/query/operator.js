@@ -78,7 +78,7 @@ export function convertToRange(v) {
   }
 }
 
-function compare(a, b) {
+export function compare(a, b) {
   if (a === MAX_INFINITY || b === MIN_INFINITY) return 1;
   if (a === MIN_INFINITY || b === MAX_INFINITY) return -1;
   return compareValues(a, b);
