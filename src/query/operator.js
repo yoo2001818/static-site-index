@@ -53,3 +53,14 @@ export function neq(values) {
   return [{ type: '*' }].concat(
     values.map(v => ({ type: '=', value: v })));
 }
+
+export function not(query) {
+  // [ > 1, < 3 ] should be converted to 1 >= n or n <= 3.
+  // Simply put, this should be run like this:
+  // - Initial 'inside' state should be false.
+  // - > and < should be inverted, along with 'equal'. Toggle 'inside' state.
+  // - If = is met outside, set '*' flag. If > and < is not met until the end,
+  //   insert '*' operator at the first. Then, convert it to !=.
+  // - If * is met, remove it and set 'inside' state.
+  // - If != is met inside, change it to =.
+}
