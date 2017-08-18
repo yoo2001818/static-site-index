@@ -57,10 +57,34 @@ export function neq(values) {
 export function not(query) {
   // [ > 1, < 3 ] should be converted to 1 >= n or n <= 3.
   // Simply put, this should be run like this:
-  // - Initial 'inside' state should be false.
+  // - Initial 'inside' state should be set by looking at the first value.
+  //   Set it if * or < is met.
   // - > and < should be inverted, along with 'equal'. Toggle 'inside' state.
   // - If = is met outside, set '*' flag. If > and < is not met until the end,
   //   insert '*' operator at the first. Then, convert it to !=.
   // - If * is met, remove it and set 'inside' state.
-  // - If != is met inside, change it to =.
+  // - If != is met inside, change it to =. 
+
+  // Special case: empty array
+  if (query.length === 0) return [{ type: '*' }];
+  // We need to search the first < or > to detect what should it be, but does
+  // it really have to be two-pass? There should be a way to do it in one pass.
+  let inside = false;
+  let addInverter = false;
+  let output = query.map(op => {
+    switch (op.type) {
+      case '*':
+        return null;
+      case '>':
+        break;
+      case '<':
+        break;
+      case '=':
+        break;
+      case '!=':
+        break;
+    }
+  });
+  if (addInverter) return [{ type: '*' }].concat(output);
+  return output;
 }
