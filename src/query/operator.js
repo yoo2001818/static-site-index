@@ -55,7 +55,7 @@ export function neq(values) {
 }
 
 export function not(query) {
-  // [ > 1, < 3 ] should be converted to 1 >= n or n <= 3.
+  // [ > 1, < 3 ] should be converted to 1 <= n or n >= 3.
   // Simply put, this should be run like this:
   // - > and < should be inverted, along with 'equal'.
   // - If = is met outside, set '*' flag. If > and < is not met until the end,
@@ -65,8 +65,6 @@ export function not(query) {
 
   // Special case: empty array
   if (query.length === 0) return [{ type: '*' }];
-  // We need to search the first < or > to detect what should it be, but does
-  // it really have to be two-pass? There should be a way to do it in one pass.
   let hasSign = false;
   let hasEqual = false;
   let output = query.map(op => {
@@ -87,4 +85,16 @@ export function not(query) {
   }).filter(v => v != null);
   if (!hasSign && hasEqual) return [{ type: '*' }].concat(output);
   return output;
+}
+
+export function or(a, b) {
+  // Check each query's 'inside' state. Make 'inside' state large as possible.
+  // This can be achieved by doing:
+  // Check initial state of the queries.
+  //   <, *, != means inside, and >, = means outside.
+  // Compare each values of the queries, progress smaller one.
+  // If both are outside and the operator enters 'inside' state,
+  //   insert that to the output and set 'inside' state.
+  // if only the query is inside and the operator leaves 'inside' state,
+  //   insert that to the output and clear 'inside' state.
 }
