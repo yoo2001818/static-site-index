@@ -1,4 +1,4 @@
-import { compare as compareValues } from '../util/comparator';
+import { compare } from '../util/comparator';
 
 // Operators are used to plan the query; User written JSONs are converted to
 // JSON with these operators.
@@ -97,4 +97,26 @@ export function or(a, b) {
   //   insert that to the output and set 'inside' state.
   // if only the query is inside and the operator leaves 'inside' state,
   //   insert that to the output and clear 'inside' state.
+  if (a.length === 0) return b;
+  if (b.length === 0) return a;
+  let aInside = ['<', '*', '!='].includes(a[0].type);
+  let bInside = ['<', '*', '!='].includes(b[0].type);
+  let aCount = 0;
+  let bCount = 0;
+  let output = [];
+  while (aCount < a.length && bCount < b.length) {
+    // Compare both values and advance smaller one.
+    let compared = compare(a[aCount], b[bCount]);
+    if (compared < 0) {
+      aCount += 1;
+    } else if (compared > 0) {
+      bCount += 1;
+    } else {
+      // Both are same - this is a special case.
+      aCount += 1;
+      bCount += 1;
+    }
+  }
+  // Digest remaining data.
+  return output;
 }
