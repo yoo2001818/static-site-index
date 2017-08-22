@@ -87,6 +87,14 @@ export function not(query) {
   return output;
 }
 
+const OPERATOR_TABLE = {
+  '<': { enter: false, exit: true },
+  '>': { enter: true, exit: false },
+  '*': { enter: true, exit: false },
+  '=': { enter: false, exit: false },
+  '!=': { enter: false, exit: false },
+};
+
 export function or(a, b) {
   // Check each query's 'inside' state. Make 'inside' state large as possible.
   // This can be achieved by doing:
@@ -106,10 +114,21 @@ export function or(a, b) {
   let output = [];
   while (aCount < a.length && bCount < b.length) {
     // Compare both values and advance smaller one.
-    let compared = compare(a[aCount], b[bCount]);
+    // TODO Handle special case '*', or equal...
+    let compared = compare(a[aCount].value, b[bCount].value);
     if (compared < 0) {
+      let op = a[aCount];
+      let { enter, exit } = OPERATOR_TABLE[op.type];
+      aInside = (aInside || enter) && (!exit);
+      if (enter && !aInside && !bInside) output.push(op);
+      if (exit && aInside && !bInside) output.push(op);
       aCount += 1;
     } else if (compared > 0) {
+      let op = b[bCount];
+      let { enter, exit } = OPERATOR_TABLE[op.type];
+      bInside = (bInside || enter) && (!exit);
+      if (enter && !aInside && !bInside) output.push(op);
+      if (exit && !aInside && bInside) output.push(op);
       bCount += 1;
     } else {
       // Both are same - this is a special case.
