@@ -95,6 +95,12 @@ const OPERATOR_TABLE = {
   '!=': { enter: false, exit: false },
 };
 
+function compareOp(a, b) {
+  // 1. Compare type. * is always smallest.
+  // 2. Compare value.
+  // 3. Compare equal.
+}
+
 export function or(a, b) {
   // Check each query's 'inside' state. Make 'inside' state large as possible.
   // This can be achieved by doing:
