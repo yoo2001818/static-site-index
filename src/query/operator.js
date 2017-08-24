@@ -97,8 +97,16 @@ const OPERATOR_TABLE = {
 
 function compareOp(a, b) {
   // 1. Compare type. * is always smallest.
+  if (a.type === '*' && b.type === '*') return 0;
+  if (a.type === '*') return 1;
+  if (b.type === '*') return -1;
   // 2. Compare value.
+  let result = compare(a.value, b.value);
+  if (result !== 0) return result;
   // 3. Compare equal.
+  if (!a.equal && b.equal) return 1;
+  if (a.equal && !b.equal) return -1;
+  return 0;
 }
 
 export function or(a, b) {
@@ -121,7 +129,7 @@ export function or(a, b) {
   while (aCount < a.length && bCount < b.length) {
     // Compare both values and advance smaller one.
     // TODO Handle special case '*', or equal...
-    let compared = compare(a[aCount].value, b[bCount].value);
+    let compared = compareOp(a[aCount], b[bCount]);
     if (compared < 0) {
       let op = a[aCount];
       let { enter, exit } = OPERATOR_TABLE[op.type];
