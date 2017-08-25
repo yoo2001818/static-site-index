@@ -102,11 +102,7 @@ function compareOp(a, b) {
   if (b.type === '*') return -1;
   // 2. Compare value.
   let result = compare(a.value, b.value);
-  if (result !== 0) return result;
-  // 3. Compare equal.
-  if (!a.equal && b.equal) return 1;
-  if (a.equal && !b.equal) return -1;
-  return 0;
+  return result;
 }
 
 export function or(a, b) {
@@ -146,6 +142,7 @@ export function or(a, b) {
       bCount += 1;
     } else {
       // Both are same - this is a special case.
+      // Treat < and = as <=, and treat > and = as >=.
       aCount += 1;
       bCount += 1;
     }
