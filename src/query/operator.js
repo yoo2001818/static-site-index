@@ -87,12 +87,13 @@ export function not(query) {
   return output;
 }
 
+// The table tells how the 'inside' state should be while entering/exiting.
 const OPERATOR_TABLE = {
-  '<': { enter: false, exit: true },
-  '>': { enter: true, exit: false },
-  '*': { enter: true, exit: false },
+  '<': { enter: true, exit: false },
+  '>': { enter: false, exit: true },
+  '*': { enter: false, exit: true },
   '=': { enter: false, exit: false },
-  '!=': { enter: false, exit: false },
+  '!=': { enter: true, exit: true },
 };
 
 function compareOp(a, b) {
@@ -117,8 +118,8 @@ export function or(a, b) {
   //   insert that to the output and clear 'inside' state.
   if (a.length === 0) return b;
   if (b.length === 0) return a;
-  let aInside = ['<', '*', '!='].includes(a[0].type);
-  let bInside = ['<', '*', '!='].includes(b[0].type);
+  let aInside = OPERATOR_TABLE[a[0].type].enter;
+  let bInside = OPERATOR_TABLE[b[0].type].enter;
   let aCount = 0;
   let bCount = 0;
   let output = [];
@@ -129,16 +130,20 @@ export function or(a, b) {
     if (compared < 0) {
       let op = a[aCount];
       let { enter, exit } = OPERATOR_TABLE[op.type];
-      aInside = (aInside || enter) && (!exit);
-      if (enter && !aInside && !bInside) output.push(op);
-      if (exit && aInside && !bInside) output.push(op);
+      aInside = exit;
+      // TODO This should be done using simpler logic....
+      if (!enter && exit && bInside) output.push(op);
+      if (!enter && !exit && !bInside) output.push(op);
+      if (enter && !exit && !bInside) output.push(op);
       aCount += 1;
     } else if (compared > 0) {
       let op = b[bCount];
       let { enter, exit } = OPERATOR_TABLE[op.type];
-      bInside = (bInside || enter) && (!exit);
-      if (enter && !aInside && !bInside) output.push(op);
-      if (exit && !aInside && bInside) output.push(op);
+      bInside = exit;
+      // TODO This should be done using simpler logic....
+      if (!enter && exit && aInside) output.push(op);
+      if (!enter && !exit && !aInside) output.push(op);
+      if (enter && !exit && !aInside) output.push(op);
       bCount += 1;
     } else {
       // Both are same - this is a special case.
