@@ -125,29 +125,40 @@ export function or(a, b) {
   let output = [];
   while (aCount < a.length && bCount < b.length) {
     // Compare both values and advance smaller one.
-    // TODO Handle special case '*', or equal...
     let compared = compareOp(a[aCount], b[bCount]);
     if (compared < 0) {
       let op = a[aCount];
-      let { enter, exit } = OPERATOR_TABLE[op.type];
+      let { exit } = OPERATOR_TABLE[op.type];
       aInside = exit;
-      // TODO This should be done using simpler logic....
-      if (!enter && exit && bInside) output.push(op);
-      if (!enter && !exit && !bInside) output.push(op);
-      if (enter && !exit && !bInside) output.push(op);
+      if (!bInside) output.push(op);
       aCount += 1;
     } else if (compared > 0) {
       let op = b[bCount];
-      let { enter, exit } = OPERATOR_TABLE[op.type];
+      let { exit } = OPERATOR_TABLE[op.type];
       bInside = exit;
-      // TODO This should be done using simpler logic....
-      if (!enter && exit && aInside) output.push(op);
-      if (!enter && !exit && !aInside) output.push(op);
-      if (enter && !exit && !aInside) output.push(op);
+      if (!aInside) output.push(op);
       bCount += 1;
     } else {
       // Both are same - this is a special case.
       // Treat < and = as <=, and treat > and = as >=.
+      // Other than that, we can safely use process any one of them.
+      let aOp = a[aCount];
+      let bOp = b[bCount];
+      let op = aOp;
+      if (aOp.type === '=') {
+        if (bOp.type === '<' || bOp.type === '>') {
+          op = Object.assign({}, bOp, { equal: true });
+        }
+      }
+      if (bOp.type === '=') {
+        if (aOp.type === '<' || aOp.type === '>') {
+          op = Object.assign({}, aOp, { equal: true });
+        }
+      }
+      let { exit } = OPERATOR_TABLE[op.type];
+      aInside = exit;
+      bInside = exit;
+      output.push(op);
       aCount += 1;
       bCount += 1;
     }
