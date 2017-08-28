@@ -37,10 +37,24 @@ export function lt(value, equal = false) {
 }
 
 export function range(gt, lt, gte = false, lte = false) {
-  return [
-    { type: '>', value: gt, equal: gte },
-    { type: '<', value: lt, equal: lte },
-  ];
+  const compared = compare(gt, lt);
+  if (compared === -1) {
+    // Normal output
+    return [
+      { type: '>', value: gt, equal: gte },
+      { type: '<', value: lt, equal: lte },
+    ];
+  } else if (compared === 1) {
+    // Inverted output
+    return [
+      { type: '<', value: lt, equal: !lte },
+      { type: '>', value: gt, equal: !gte },
+    ];
+  } else {
+    // Return empty array unless both are true.
+    if (!gte || !lte) return [];
+    return [ { type: '=', value: gt } ];
+  }
 }
 
 // This assumes that the values array is sorted.
