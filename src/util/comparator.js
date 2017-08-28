@@ -28,10 +28,32 @@ export function indexComparator(a, b) {
   return -compare(a.id, b.id);
 }
 
+function getPriority(value) {
+  switch (typeof value) {
+    case 'boolean': return 0;
+    case 'number': return 1;
+    case 'string': return 2;
+    default: return 3;
+  }
+}
+
 export function compare(a, b) {
-  // TODO Compare non-number, non-string values
-  if (a == null && b != null) return 1;
-  if (a != null && b == null) return -1;
+  if (a == null && b == null) return 0;
+  if (a == null && b != null) return -1;
+  if (a != null && b == null) return 1;
+  // Only treat numbers and strings - convert boolean to number.
+  // Also, don't treat object number/strings...
+  let aId = getPriority(a);
+  let bId = getPriority(b);
+  if (aId < bId) return -1;
+  if (aId > bId) return 1;
+  if (aId === 1) {
+    let aNaN = isNaN(a);
+    let bNaN = isNaN(b);
+    if (aNaN && bNaN) return 0;
+    if (aNaN) return -1;
+    if (bNaN) return 1;
+  }
   if (a > b) return 1;
   if (a < b) return -1;
   return 0;
