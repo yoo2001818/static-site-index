@@ -57,15 +57,40 @@ export function range(gt, lt, gte = false, lte = false) {
   }
 }
 
-// This assumes that the values array is sorted.
-// TODO Check if the array is sorted, and sort them if required
-export function eq(values) {
-  return values.map(v => ({ type: '=', value: v }));
+export function eq(values, noSort) {
+  if (values.length === 0) return [];
+  if (noSort) {
+    return values.map(v => ({ type: '=', value: v }));
+  }
+  let arr = values.slice();
+  arr.sort(compare);
+  let result = [{ type: '=', value: arr[0] }];
+  for (let i = 1; i < arr.length; ++i) {
+    if (arr[i] !== arr[i - 1]) {
+      result.push({ type: '=', value: arr[i] });
+    }
+  }
+  return result;
 }
 
-export function neq(values) {
-  return [{ type: '*' }].concat(
-    values.map(v => ({ type: '=', value: v })));
+export function neq(values, noSort) {
+  if (values.length === 0) return [];
+  if (noSort) {
+    return [{ type: '*' }].concat(
+      values.map(v => ({ type: '!=', value: v })));
+  }
+  let arr = values.slice();
+  arr.sort(compare);
+  let result = [
+    { type: '*' },
+    { type: '!=', value: arr[0] },
+  ];
+  for (let i = 1; i < arr.length; ++i) {
+    if (arr[i] !== arr[i - 1]) {
+      result.push({ type: '!=', value: arr[i] });
+    }
+  }
+  return result;
 }
 
 export function not(query) {

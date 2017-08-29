@@ -38,25 +38,52 @@ describe('range', () => {
 
 describe('eq', () => {
   it('should return right value', () => {
-
+    expect(operators.eq([1, 2, 3])).toEqual([
+      { type: '=', value: 1 },
+      { type: '=', value: 2 },
+      { type: '=', value: 3 },
+    ]);
   });
   it('should sort values', () => {
-
+    expect(operators.eq([1, 3, 2])).toEqual([
+      { type: '=', value: 1 },
+      { type: '=', value: 2 },
+      { type: '=', value: 3 },
+    ]);
   });
   it('should filter same values', () => {
-
+    expect(operators.eq([1, 3, 3, 2])).toEqual([
+      { type: '=', value: 1 },
+      { type: '=', value: 2 },
+      { type: '=', value: 3 },
+    ]);
   });
 });
 
 describe('neq', () => {
   it('should return right value', () => {
-
+    expect(operators.neq([1, 2, 3])).toEqual([
+      { type: '*' },
+      { type: '!=', value: 1 },
+      { type: '!=', value: 2 },
+      { type: '!=', value: 3 },
+    ]);
   });
   it('should sort values', () => {
-
+    expect(operators.neq([1, 3, 2])).toEqual([
+      { type: '*' },
+      { type: '!=', value: 1 },
+      { type: '!=', value: 2 },
+      { type: '!=', value: 3 },
+    ]);
   });
   it('should filter same values', () => {
-
+    expect(operators.neq([1, 3, 3, 2])).toEqual([
+      { type: '*' },
+      { type: '!=', value: 1 },
+      { type: '!=', value: 2 },
+      { type: '!=', value: 3 },
+    ]);
   });
 });
 
