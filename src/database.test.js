@@ -27,6 +27,7 @@ describe('database', () => {
     });
   });
   describe('#explain', () => {
+    /*
     it('should return appropriate results', async() => {
       await database.addIndex(['title']);
       expect(await database.explain({})).toEqual([{
@@ -68,5 +69,6 @@ describe('database', () => {
         high: undefined,
       }]);
     });
+    */
   });
 });

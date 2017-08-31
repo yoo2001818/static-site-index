@@ -88,7 +88,37 @@ describe('neq', () => {
 });
 
 describe('not', () => {
-
+  it('should invert eq/neq', () => {
+    expect(operators.not(operators.eq([1, 5, 9])))
+      .toEqual(operators.neq([1, 5, 9]));
+    expect(operators.not(operators.neq([1, 5, 9])))
+      .toEqual(operators.eq([1, 5, 9]));
+  });
+  it('should invert range', () => {
+    expect(operators.not(operators.range(3, 8)))
+      .toEqual(operators.range(8, 3));
+    expect(operators.not(operators.range(3, 8, true)))
+      .toEqual(operators.range(8, 3, false, true));
+    expect(operators.not(operators.range(3, 8, false, true)))
+      .toEqual(operators.range(8, 3, true, false));
+  });
+  it('should invert complex querys', () => {
+    expect(operators.not([
+      { type: '!=', value: 1 },
+      { type: '!=', value: 2 },
+      { type: '<', value: 3, equal: false },
+      { type: '=', value: 4 },
+      { type: '>', value: 5, equal: false },
+      { type: '!=', value: 6 },
+    ])).toEqual([
+      { type: '=', value: 1 },
+      { type: '=', value: 2 },
+      { type: '>', value: 3, equal: true },
+      { type: '!=', value: 4 },
+      { type: '<', value: 5, equal: true },
+      { type: '=', value: 6 },
+    ]);
+  });
 });
 
 // Aka union
