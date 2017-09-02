@@ -128,11 +128,11 @@ export function not(query) {
 
 // The table tells how the 'inside' state should be while entering/exiting.
 const OPERATOR_TABLE = {
-  '<': { enter: true, exit: false },
-  '>': { enter: false, exit: true },
-  '*': { enter: false, exit: true },
-  '=': { enter: false, exit: false },
-  '!=': { enter: true, exit: true },
+  '<': { enter: true, exit: false, flag: 2 },
+  '>': { enter: false, exit: true, flag: 1 },
+  '*': { enter: false, exit: true, flag: 1 },
+  '=': { enter: false, exit: false, flag: 0 },
+  '!=': { enter: true, exit: true, flag: 3 },
 };
 
 function compareOp(a, b) {
@@ -144,6 +144,23 @@ function compareOp(a, b) {
   let result = compare(a.value, b.value);
   return result;
 }
+
+const OR_EQUAL_ACTIONS = [
+  // Select anything; prefer the one with equal flag.
+  (a, b) => a.equal ? a : b,
+  // Apply equal flag.
+  (a, b) => Object.assign({}, b, { equal: true }),
+  // Do nothing.
+  () => null,
+  // If both don't have equal sign, create !=. Otherwise, do nothing.
+  (a, b) => (a.equal || b.equal) ? null : { type: '!=', value: a.value },
+];
+
+// Please refer to OPERATOR_TABLE's flag and OR_EQUAL_ACTIONS to see how it
+// works.
+const OR_EQUAL_LUT = [
+  0, 1, 1, 2, -1, 0, 3, 3, -1, -1, 0, 3, -1, -1, -1, 0,
+].map(v => OR_EQUAL_ACTIONS[v]);
 
 export function or(a, b) {
   // Check each query's 'inside' state. Make 'inside' state large as possible.
@@ -185,16 +202,22 @@ export function or(a, b) {
       // (4) (< or >) and !=, use < or >
       // (5) = and !=, ignore both
       // (6) If both are same, use one of them.
-      // In conclusion, this requires some complicated stuff.
-      // (1) If both 'inside' state changes differently, check equal and add !=
-      // (2) If both 'inside' state changes to same state, use one of them,
-      //     while adding equal flag if one of them has it.
-      // (3) If both 'inside' state doesn't change and are same - Use one of
-      //     them
+      // According to this, a look up table has been created.
       let aOp = a[aCount];
       let bOp = b[bCount];
-      aInside = OPERATOR_TABLE[aOp.type].exit;
-      bInside = OPERATOR_TABLE[bOp.type].exit;
+      let { flag: aOpFlag, exit: aOpExit } = OPERATOR_TABLE[aOp.type];
+      let { flag: bOpFlag, exit: bOpExit } = OPERATOR_TABLE[bOp.type];
+      let output;
+      if (aOpFlag < bOpFlag) {
+        let flag = (aOpFlag << 2) | bOpFlag;
+        output = OR_EQUAL_LUT[flag](aOp, bOp);
+      } else {
+        let flag = (bOpFlag << 2) | aOpFlag;
+        output = OR_EQUAL_LUT[flag](bOp, aOp);
+      }
+      if (output != null) output.push(output);
+      aInside = aOpExit;
+      bInside = bOpExit;
       aCount += 1;
       bCount += 1;
     }
