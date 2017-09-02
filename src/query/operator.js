@@ -178,26 +178,23 @@ export function or(a, b) {
       if (!aInside) output.push(op);
       bCount += 1;
     } else {
-      // Both are same - this is a special case.
-      // Treat < and = as <=, and treat > and = as >=.
-      // Other than that, we can safely use process any one of them.
+      // Both have same value - this is a special case.
+      // (1) < and >, both doesn't have equal - add !=
+      // (2) < and >, one of them are equal - NOP
+      // (3) (< or >) and =, add equal flag
+      // (4) (< or >) and !=, use < or >
+      // (5) = and !=, ignore both
+      // (6) If both are same, use one of them.
+      // In conclusion, this requires some complicated stuff.
+      // (1) If both 'inside' state changes differently, check equal and add !=
+      // (2) If both 'inside' state changes to same state, use one of them,
+      //     while adding equal flag if one of them has it.
+      // (3) If both 'inside' state doesn't change and are same - Use one of
+      //     them
       let aOp = a[aCount];
       let bOp = b[bCount];
-      let op = aOp;
-      if (aOp.type === '=') {
-        if (bOp.type === '<' || bOp.type === '>') {
-          op = Object.assign({}, bOp, { equal: true });
-        }
-      }
-      if (bOp.type === '=') {
-        if (aOp.type === '<' || aOp.type === '>') {
-          op = Object.assign({}, aOp, { equal: true });
-        }
-      }
-      let { exit } = OPERATOR_TABLE[op.type];
-      aInside = exit;
-      bInside = exit;
-      output.push(op);
+      aInside = OPERATOR_TABLE[aOp.type].exit;
+      bInside = OPERATOR_TABLE[bOp.type].exit;
       aCount += 1;
       bCount += 1;
     }
