@@ -138,8 +138,8 @@ const OPERATOR_TABLE = {
 function compareOp(a, b) {
   // 1. Compare type. * is always smallest.
   if (a.type === '*' && b.type === '*') return 0;
-  if (a.type === '*') return 1;
-  if (b.type === '*') return -1;
+  if (a.type === '*') return -1;
+  if (b.type === '*') return 1;
   // 2. Compare value.
   let result = compare(a.value, b.value);
   return result;
@@ -176,6 +176,10 @@ export function or(a, b) {
   if (b.length === 0) return a;
   let aInside = OPERATOR_TABLE[a[0].type].enter;
   let bInside = OPERATOR_TABLE[b[0].type].enter;
+  // We have to prepend * operator if the completed statement doesn't exit
+  // true state at all, and either A and B didn't provide * operator.
+  let doPrepend = (aInside || bInside) &&
+    !(aInside.type === '*' || bInside.type === '*');
   let aCount = 0;
   let bCount = 0;
   let output = [];
@@ -207,21 +211,45 @@ export function or(a, b) {
       let bOp = b[bCount];
       let { flag: aOpFlag, exit: aOpExit } = OPERATOR_TABLE[aOp.type];
       let { flag: bOpFlag, exit: bOpExit } = OPERATOR_TABLE[bOp.type];
-      let output;
+      let outputOp;
       if (aOpFlag < bOpFlag) {
         let flag = (aOpFlag << 2) | bOpFlag;
-        output = OR_EQUAL_LUT[flag](aOp, bOp);
+        outputOp = OR_EQUAL_LUT[flag](aOp, bOp);
       } else {
         let flag = (bOpFlag << 2) | aOpFlag;
-        output = OR_EQUAL_LUT[flag](bOp, aOp);
+        outputOp = OR_EQUAL_LUT[flag](bOp, aOp);
       }
-      if (output != null) output.push(output);
+      if (outputOp != null) output.push(outputOp);
       aInside = aOpExit;
       bInside = bOpExit;
       aCount += 1;
       bCount += 1;
     }
+    if (!bInside && !aInside) doPrepend = false;
   }
   // Digest remaining data.
+  while (aCount < a.length) {
+    let op = a[aCount];
+    let { exit } = OPERATOR_TABLE[op.type];
+    aInside = exit;
+    if (!bInside) {
+      output.push(op);
+      if (!aInside) doPrepend = false;
+    }
+    aCount += 1;
+  }
+  while (bCount < b.length) {
+    let op = b[bCount];
+    let { exit } = OPERATOR_TABLE[op.type];
+    bInside = exit;
+    if (!aInside) {
+      output.push(op);
+      if (!bInside) doPrepend = false;
+    }
+    bCount += 1;
+  }
+  if (doPrepend) {
+    output.unshift({ type: '*' });
+  }
   return output;
 }

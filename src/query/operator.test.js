@@ -123,7 +123,58 @@ describe('not', () => {
 
 // Aka union
 describe('or', () => {
-
+  it('should merge eqs', () => {
+    expect(operators.or(operators.eq([1, 5]), operators.eq([2, 6])))
+      .toEqual(operators.eq([1, 2, 5, 6]));
+  });
+  it('should merge neqs', () => {
+    expect(operators.or(
+      operators.neq([1, 5, 6, 9]),
+      operators.neq([5, 9, 10])
+    )).toEqual(operators.neq([5, 9]));
+  });
+  it('should merge neqs and eq', () => {
+    expect(operators.or(
+      operators.neq([1, 2, 3, 5, 10, 20]),
+      operators.eq([1, 2, 10, 500])
+    )).toEqual(operators.neq([3, 5, 20]));
+  });
+  it('should merge ranges', () => {
+    expect(operators.or(operators.range(0, 9), operators.range(9, 12)))
+      .toEqual([
+        { type: '>', value: 0, equal: false },
+        { type: '!=', value: 9 },
+        { type: '<', value: 12, equal: false },
+      ]);
+    expect(operators.or(operators.range(0, 9), operators.range(9, 12, true)))
+      .toEqual(operators.range(0, 12));
+    expect(operators.or(operators.range(0, 6), operators.range(3, 12)))
+      .toEqual(operators.range(0, 12));
+    expect(operators.or(operators.range(0, 3), operators.range(4, 8)))
+      .toEqual([
+        { type: '>', value: 0, equal: false },
+        { type: '<', value: 3, equal: false },
+        { type: '>', value: 4, equal: false },
+        { type: '<', value: 8, equal: false },
+      ]);
+    expect(operators.or(operators.range(4, 0), operators.range(8, 4)))
+      .toEqual([{ type: '*' }]);
+    expect(operators.or(
+      operators.range(4, 0, true, true),
+      operators.range(8, 4, true, true),
+    ))
+      .toEqual([{ type: '*' }, { type: '!=', value: 4 }]);
+    expect(operators.or(
+      operators.range(3, 0, true, true),
+      operators.range(1, 2),
+    ))
+      .toEqual([
+        { type: '<', value: 0, equal: false },
+        { type: '>', value: 1, equal: false },
+        { type: '<', value: 2, equal: false },
+        { type: '>', value: 3, equal: false },
+      ]);
+  });
 });
 
 // Aka intersect
