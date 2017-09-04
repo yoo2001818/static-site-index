@@ -162,18 +162,28 @@ describe('or', () => {
     expect(operators.or(
       operators.range(4, 0, true, true),
       operators.range(8, 4, true, true),
-    ))
-      .toEqual([{ type: '*' }, { type: '!=', value: 4 }]);
+    )).toEqual([{ type: '*' }, { type: '!=', value: 4 }]);
     expect(operators.or(
       operators.range(3, 0, true, true),
       operators.range(1, 2),
-    ))
-      .toEqual([
-        { type: '<', value: 0, equal: false },
-        { type: '>', value: 1, equal: false },
-        { type: '<', value: 2, equal: false },
-        { type: '>', value: 3, equal: false },
-      ]);
+    )).toEqual([
+      { type: '<', value: 0, equal: false },
+      { type: '>', value: 1, equal: false },
+      { type: '<', value: 2, equal: false },
+      { type: '>', value: 3, equal: false },
+    ]);
+  });
+  it('should merge range and eq', () => {
+    expect(operators.or(
+      operators.range(3, 9),
+      operators.eq([1, 2, 3, 5, 8, 10])
+    )).toEqual([
+      { type: '=', value: 1 },
+      { type: '=', value: 2 },
+      { type: '>', value: 3, equal: true },
+      { type: '<', value: 9, equal: false },
+      { type: '=', value: 10 },
+    ]);
   });
 });
 
