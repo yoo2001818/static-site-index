@@ -184,6 +184,36 @@ describe('or', () => {
       { type: '<', value: 9, equal: false },
       { type: '=', value: 10 },
     ]);
+    expect(operators.or(
+      operators.range(9, 3, true, true),
+      operators.eq([1, 2, 3, 5, 8, 10])
+    )).toEqual([
+      { type: '<', value: 3, equal: true },
+      { type: '=', value: 5 },
+      { type: '=', value: 8 },
+      { type: '>', value: 9, equal: false },
+    ]);
+  });
+  it('should merge range and neq', () => {
+    expect(operators.or(
+      operators.range(3, 9),
+      operators.neq([1, 2, 3, 5, 8, 10])
+    )).toEqual([
+      { type: '*' },
+      { type: '!=', value: 1 },
+      { type: '!=', value: 2 },
+      { type: '!=', value: 3 },
+      { type: '!=', value: 10 },
+    ]);
+    expect(operators.or(
+      operators.range(9, 3, true, true),
+      operators.neq([1, 2, 3, 5, 8, 10])
+    )).toEqual([
+      { type: '*' },
+      { type: '!=', value: 3 },
+      { type: '!=', value: 5 },
+      { type: '!=', value: 8 },
+    ]);
   });
 });
 
