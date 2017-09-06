@@ -219,7 +219,83 @@ describe('or', () => {
 
 // Aka intersect
 describe('and', () => {
-
+  it('should merge eqs', () => {
+    expect(operators.and(operators.eq([1, 2, 5]), operators.eq([2, 5, 6])))
+      .toEqual(operators.eq([2, 5]));
+  });
+  it('should merge neqs', () => {
+    expect(operators.and(
+      operators.neq([1, 5, 6, 9]),
+      operators.neq([5, 9, 10])
+    )).toEqual(operators.neq([1, 5, 6, 9, 10]));
+  });
+  it('should merge neqs and eq', () => {
+    expect(operators.and(
+      operators.neq([1, 2, 3, 5, 10, 20]),
+      operators.eq([1, 2, 10, 500])
+    )).toEqual(operators.eq([500]));
+  });
+  it('should merge ranges', () => {
+    expect(operators.and(operators.range(0, 9), operators.range(9, 12)))
+      .toEqual([]);
+    expect(operators.and(
+      operators.range(0, 9, true), operators.range(9, 12, true)
+    ))
+      .toEqual(operators.eq([9]));
+    expect(operators.and(operators.range(0, 6), operators.range(3, 12, true)))
+      .toEqual(operators.range(3, 6, true));
+    expect(operators.and(operators.range(0, 3), operators.range(4, 8)))
+      .toEqual([]);
+    expect(operators.and(
+      operators.range(4, 0),
+      operators.range(8, 4),
+    )).toEqual([
+      { type: '<', value: 0, equal: true },
+      { type: '>', value: 8, equal: true },
+    ]);
+    expect(operators.and(
+      operators.range(4, 0, true, true),
+      operators.range(8, 4, true, true),
+    )).toEqual([
+      { type: '<', value: 0, equal: false },
+      { type: '>', value: 8, equal: false },
+    ]);
+    expect(operators.and(
+      operators.range(3, 0, true, true),
+      operators.range(1, 2),
+    )).toEqual([]);
+  });
+  it('should merge range and eq', () => {
+    expect(operators.and(
+      operators.range(3, 9),
+      operators.eq([1, 2, 3, 5, 8, 10]),
+    )).toEqual(operators.eq([5, 8]));
+    expect(operators.and(
+      operators.range(9, 3),
+      operators.eq([1, 2, 3, 5, 8, 10])
+    )).toEqual(operators.eq([3, 5, 8]));
+  });
+  it('should merge range and neq', () => {
+    expect(operators.and(
+      operators.range(3, 9, true),
+      operators.neq([1, 2, 3, 5, 8, 10])
+    )).toEqual([
+      { type: '>', value: 3, equal: false },
+      { type: '!=', value: 5 },
+      { type: '!=', value: 8 },
+      { type: '<', value: 9, equal: false },
+    ]);
+    expect(operators.and(
+      operators.range(9, 3, true, true),
+      operators.neq([1, 2, 3, 5, 8, 10])
+    )).toEqual([
+      { type: '!=', value: 1 },
+      { type: '!=', value: 2 },
+      { type: '<', value: 3, equal: false },
+      { type: '>', value: 9, equal: false },
+      { type: '!=', value: 10 },
+    ]);
+  });
 });
 
 // Why do we need this?
