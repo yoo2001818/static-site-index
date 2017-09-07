@@ -253,3 +253,88 @@ export function or(a, b) {
   }
   return output;
 }
+
+export function and(a, b) {
+  // The operation is quite same with OR, but append state if both are in
+  // 'inside' state.
+  if (a.length === 0) return [];
+  if (b.length === 0) return [];
+  let aInside = OPERATOR_TABLE[a[0].type].enter;
+  let bInside = OPERATOR_TABLE[b[0].type].enter;
+  // We have to prepend * operator if the completed statement doesn't exit
+  // true state at all, and either A and B didn't provide * operator.
+  let doPrepend = (aInside || bInside) &&
+    !(aInside.type === '*' || bInside.type === '*');
+  let aCount = 0;
+  let bCount = 0;
+  let output = [];
+  while (aCount < a.length && bCount < b.length) {
+    // Compare both values and advance smaller one.
+    let compared = compareOp(a[aCount], b[bCount]);
+    if (compared < 0) {
+      let op = a[aCount];
+      let { exit } = OPERATOR_TABLE[op.type];
+      aInside = exit;
+      if (bInside) output.push(op);
+      aCount += 1;
+    } else if (compared > 0) {
+      let op = b[bCount];
+      let { exit } = OPERATOR_TABLE[op.type];
+      bInside = exit;
+      if (aInside) output.push(op);
+      bCount += 1;
+    } else {
+      // Both have same value - this is a special case.
+      // (1) < and >, both doesn't have equal - add !=
+      // (2) < and >, one of them are equal - NOP
+      // (3) (< or >) and =, add equal flag
+      // (4) (< or >) and !=, use < or >
+      // (5) = and !=, ignore both
+      // (6) If both are same, use one of them.
+      // According to this, a look up table has been created.
+      let aOp = a[aCount];
+      let bOp = b[bCount];
+      let { flag: aOpFlag, exit: aOpExit } = OPERATOR_TABLE[aOp.type];
+      let { flag: bOpFlag, exit: bOpExit } = OPERATOR_TABLE[bOp.type];
+      let outputOp;
+      if (aOpFlag < bOpFlag) {
+        let flag = (aOpFlag << 2) | bOpFlag;
+        outputOp = OR_EQUAL_LUT[flag](aOp, bOp);
+      } else {
+        let flag = (bOpFlag << 2) | aOpFlag;
+        outputOp = OR_EQUAL_LUT[flag](bOp, aOp);
+      }
+      if (outputOp != null) output.push(outputOp);
+      aInside = aOpExit;
+      bInside = bOpExit;
+      aCount += 1;
+      bCount += 1;
+    }
+    if (!bInside && !aInside) doPrepend = false;
+  }
+  // Digest remaining data.
+  while (aCount < a.length) {
+    let op = a[aCount];
+    let { exit } = OPERATOR_TABLE[op.type];
+    aInside = exit;
+    if (bInside) {
+      output.push(op);
+      if (!aInside) doPrepend = false;
+    }
+    aCount += 1;
+  }
+  while (bCount < b.length) {
+    let op = b[bCount];
+    let { exit } = OPERATOR_TABLE[op.type];
+    bInside = exit;
+    if (aInside) {
+      output.push(op);
+      if (!bInside) doPrepend = false;
+    }
+    bCount += 1;
+  }
+  if (doPrepend) {
+    output.unshift({ type: '*' });
+  }
+  return output;
+}
