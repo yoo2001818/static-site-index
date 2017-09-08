@@ -254,6 +254,25 @@ export function or(a, b) {
   return output;
 }
 
+const AND_EQUAL_ACTIONS = [
+  // If both lack equal sign, ignore. or =
+  (a, b) => a.equal && b.equal ? { type: '=', value: a.value } : null,
+  // Variant of the top - equal vs < or >.
+  (a, b) => b.equal ? { type: '=', value: a.value } : null,
+  // Select anything; prefer the one without equal flag.
+  (a, b) => a.equal ? b : a,
+  // Do nothing.
+  () => null,
+  // Strip equal flag.
+  (a, b) => Object.assign({}, b, { equal: false }),
+];
+
+// Please refer to OPERATOR_TABLE's flag and OR_EQUAL_ACTIONS to see how it
+// works.
+const AND_EQUAL_LUT = [
+  2, 1, 1, 3, -1, 2, 0, 4, -1, -1, 4, 2, -1, -1, -1, 2,
+].map(v => AND_EQUAL_ACTIONS[v]);
+
 export function and(a, b) {
   // The operation is quite same with OR, but append state if both are in
   // 'inside' state.
@@ -285,12 +304,12 @@ export function and(a, b) {
       bCount += 1;
     } else {
       // Both have same value - this is a special case.
-      // (1) < and >, both doesn't have equal - add !=
-      // (2) < and >, one of them are equal - NOP
-      // (3) (< or >) and =, add equal flag
-      // (4) (< or >) and !=, use < or >
+      // (1) < and >, both doesn't have equal - ignore
+      // (2) < and >, both of them are equal - change to =
+      // (3) (< or >) and =, if < or > has equal flag, = or ignore
+      // (4) (< or >) and !=, use < or >, strip equal flag
       // (5) = and !=, ignore both
-      // (6) If both are same, use one of them.
+      // (6) If both are same, use one of them, while stripping equal flag.
       // According to this, a look up table has been created.
       let aOp = a[aCount];
       let bOp = b[bCount];
@@ -299,10 +318,10 @@ export function and(a, b) {
       let outputOp;
       if (aOpFlag < bOpFlag) {
         let flag = (aOpFlag << 2) | bOpFlag;
-        outputOp = OR_EQUAL_LUT[flag](aOp, bOp);
+        outputOp = AND_EQUAL_LUT[flag](aOp, bOp);
       } else {
         let flag = (bOpFlag << 2) | aOpFlag;
-        outputOp = OR_EQUAL_LUT[flag](bOp, aOp);
+        outputOp = AND_EQUAL_LUT[flag](bOp, aOp);
       }
       if (outputOp != null) output.push(outputOp);
       aInside = aOpExit;
