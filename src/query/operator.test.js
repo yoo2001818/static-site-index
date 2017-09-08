@@ -239,7 +239,7 @@ describe('and', () => {
     expect(operators.and(operators.range(0, 9), operators.range(9, 12)))
       .toEqual([]);
     expect(operators.and(
-      operators.range(0, 9, true), operators.range(9, 12, true)
+      operators.range(0, 9, false, true), operators.range(9, 12, true)
     ))
       .toEqual(operators.eq([9]));
     expect(operators.and(operators.range(0, 6), operators.range(3, 12, true)))
@@ -251,6 +251,7 @@ describe('and', () => {
       operators.range(8, 4),
     )).toEqual([
       { type: '<', value: 0, equal: true },
+      { type: '=', value: 4 },
       { type: '>', value: 8, equal: true },
     ]);
     expect(operators.and(
@@ -273,7 +274,7 @@ describe('and', () => {
     expect(operators.and(
       operators.range(9, 3),
       operators.eq([1, 2, 3, 5, 8, 10])
-    )).toEqual(operators.eq([3, 5, 8]));
+    )).toEqual(operators.eq([1, 2, 3, 10]));
   });
   it('should merge range and neq', () => {
     expect(operators.and(

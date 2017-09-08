@@ -264,7 +264,7 @@ const AND_EQUAL_ACTIONS = [
   // Do nothing.
   () => null,
   // Strip equal flag.
-  (a, b) => Object.assign({}, b, { equal: false }),
+  (a, b) => Object.assign({}, a, { equal: false }),
 ];
 
 // Please refer to OPERATOR_TABLE's flag and OR_EQUAL_ACTIONS to see how it
@@ -280,10 +280,6 @@ export function and(a, b) {
   if (b.length === 0) return [];
   let aInside = OPERATOR_TABLE[a[0].type].enter;
   let bInside = OPERATOR_TABLE[b[0].type].enter;
-  // We have to prepend * operator if the completed statement doesn't exit
-  // true state at all, and either A and B didn't provide * operator.
-  let doPrepend = (aInside || bInside) &&
-    !(aInside.type === '*' || bInside.type === '*');
   let aCount = 0;
   let bCount = 0;
   let output = [];
@@ -294,13 +290,13 @@ export function and(a, b) {
       let op = a[aCount];
       let { exit } = OPERATOR_TABLE[op.type];
       aInside = exit;
-      if (bInside) output.push(op);
+      if (bInside && op.type !== '*') output.push(op);
       aCount += 1;
     } else if (compared > 0) {
       let op = b[bCount];
       let { exit } = OPERATOR_TABLE[op.type];
       bInside = exit;
-      if (aInside) output.push(op);
+      if (aInside && op.type !== '*') output.push(op);
       bCount += 1;
     } else {
       // Both have same value - this is a special case.
@@ -329,7 +325,6 @@ export function and(a, b) {
       aCount += 1;
       bCount += 1;
     }
-    if (!bInside && !aInside) doPrepend = false;
   }
   // Digest remaining data.
   while (aCount < a.length) {
@@ -338,7 +333,6 @@ export function and(a, b) {
     aInside = exit;
     if (bInside) {
       output.push(op);
-      if (!aInside) doPrepend = false;
     }
     aCount += 1;
   }
@@ -348,12 +342,8 @@ export function and(a, b) {
     bInside = exit;
     if (aInside) {
       output.push(op);
-      if (!bInside) doPrepend = false;
     }
     bCount += 1;
-  }
-  if (doPrepend) {
-    output.unshift({ type: '*' });
   }
   return output;
 }
