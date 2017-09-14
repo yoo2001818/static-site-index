@@ -22,22 +22,28 @@ function mergeSubset(dest, src, op) {
   }
 }
 
+function forEach(obj, callback) {
+  if (Array.isArray(obj)) {
+    obj.forEach(callback);
+  } else {
+    callback(obj);
+  }
+}
+
 function processSubset(query) {
   let keys = {};
   for (let key in query) {
-    // TODO Handle arrays
     switch (key) {
       case '$and':
-        mergeSubset(keys, processSubset(query[key]), and);
-        break;
-      case '$not':
-        mergeSubset(keys, not(processSubset(query[key])), and);
-        break;
-      case '$or':
-        mergeSubset(keys, processSubset(query[key]), or);
+        forEach(query[key], v => mergeSubset(keys, processSubset(v), and));
         break;
       case '$nor':
-        // Uhh I don't get it
+      case '$not':
+        // Technically !(A || B) = (!A) && (!B), but this feels weird.
+        forEach(query[key], v => mergeSubset(keys, not(processSubset(v)), and));
+        break;
+      case '$or':
+        forEach(query[key], v => mergeSubset(keys, processSubset(v), or));
         break;
       default:
         break;
