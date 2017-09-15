@@ -45,9 +45,24 @@ function processSubset(query) {
       case '$or':
         forEach(query[key], v => mergeSubset(keys, processSubset(v), or));
         break;
-      default:
+      default: {
+        // User defined values
+        let result = processValue(query[key]);
+        if (keys[key] == null) keys[key] = result;
+        else keys[key] = and(query[key], keys[key]);
         break;
+      }
     }
   }
   return keys;
+}
+
+function processValue(query) {
+  // If the query is an object, depending on the value, it may have to be
+  // prefixed - { a: { x: 1 } } should be prefixed to a.x.
+  // Of course, we may have to use special identifier to avoid conflicts?
+  if (typeof query === 'object') {
+  } else {
+    return eq([query]);
+  }
 }
