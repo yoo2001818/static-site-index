@@ -29,6 +29,8 @@ export function indexComparator(a, b) {
 }
 
 function getPriority(value) {
+  if (value === undefined) return -2;
+  if (value === null) return -1;
   switch (typeof value) {
     case 'boolean': return 0;
     case 'number': return 1;
@@ -38,9 +40,6 @@ function getPriority(value) {
 }
 
 export function compare(a, b) {
-  if (a == null && b == null) return 0;
-  if (a == null && b != null) return -1;
-  if (a != null && b == null) return 1;
   // Only treat numbers and strings - convert boolean to number.
   // Also, don't treat object number/strings...
   let aId = getPriority(a);

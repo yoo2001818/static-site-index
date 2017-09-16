@@ -23,9 +23,14 @@ describe('compare', () => {
     assertGreater(1212, '1212');
     assertGreater(Infinity, 'gorani');
   });
-  it('should treat null smallest', () => {
+  it('should treat null 2nd smallest', () => {
     assertGreater(null, -Infinity);
     assertGreater(null, NaN);
     assertGreater(NaN, -Infinity);
+  });
+  it('should treat undefined smallest', () => {
+    assertGreater(undefined, -Infinity);
+    assertGreater(undefined, NaN);
+    assertGreater(undefined, null);
   });
 });
